@@ -21,6 +21,7 @@ Thư mục này chứa **tài liệu kỹ thuật chi tiết** cho package `@vn-
 |---|---|
 | [`CORE.md`](./CORE.md) | Chi tiết `VNGisMap`, `ApiClient`, `EventEmitter`, `LayerManager`. |
 | [`RENDERERS.md`](./RENDERERS.md) | Chi tiết `IRenderer`, `LeafletRenderer`, `MapLibreRenderer`. |
+| [`TILEMAP.md`](./TILEMAP.md) | Cấu hình raster basemap, đổi tile runtime và xử lý lỗi thường gặp. |
 
 ### Vận hành
 

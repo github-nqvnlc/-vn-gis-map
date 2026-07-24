@@ -20,6 +20,7 @@ export type {
   RendererType,
   LatLng,
   BoundsTuple,
+  TileLayerOptions,
   // Map configuration
   MapConfig,
   MapOptions,

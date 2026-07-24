@@ -11,10 +11,13 @@ import type {
   GeoJSONOptions,
   EventHandler,
   EventPayload,
+  TileLayerOptions,
 } from '../../types';
 import maplibregl from 'maplibre-gl';
 
 export class MapLibreRenderer {
+  private static readonly BASE_SOURCE_ID = 'vn-gis-basemap-source';
+  private static readonly BASE_LAYER_ID = 'vn-gis-basemap-layer';
   private map: maplibregl.Map | null = null;
   private eventHandlers = new Map<string, Set<EventHandler>>();
   private layerData = new Map<string, { sourceId: string; layerId: string }>();
@@ -42,19 +45,24 @@ export class MapLibreRenderer {
         style: {
           version: 8,
           sources: {
-            'osm-tiles': {
+            [MapLibreRenderer.BASE_SOURCE_ID]: {
               type: 'raster',
-              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+              tiles: [
+                this.normalizeTileUrl(
+                  options.tileLayer?.url ?? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                ),
+              ],
               tileSize: 256,
               attribution:
+                options.tileLayer?.attribution ??
                 '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             },
           },
           layers: [
             {
-              id: 'osm-tiles-layer',
+              id: MapLibreRenderer.BASE_LAYER_ID,
               type: 'raster',
-              source: 'osm-tiles',
+              source: MapLibreRenderer.BASE_SOURCE_ID,
               minzoom: 0,
               maxzoom: 19,
             },
@@ -366,6 +374,42 @@ export class MapLibreRenderer {
     }
 
     this.layerData.set(id, { sourceId, layerId });
+  }
+
+  setTileLayer(options: TileLayerOptions): void {
+    if (!this.map || !this.map.isStyleLoaded()) return;
+
+    const layerId = MapLibreRenderer.BASE_LAYER_ID;
+    const sourceId = MapLibreRenderer.BASE_SOURCE_ID;
+    if (this.map.getLayer(layerId)) {
+      this.map.removeLayer(layerId);
+    }
+    if (this.map.getSource(sourceId)) {
+      this.map.removeSource(sourceId);
+    }
+
+    this.map.addSource(sourceId, {
+      type: 'raster',
+      tiles: [this.normalizeTileUrl(options.url)],
+      tileSize: 256,
+      attribution: options.attribution ?? '',
+    });
+
+    const beforeId = this.map.getStyle().layers?.find((layer) => layer.type !== 'raster')?.id;
+    this.map.addLayer(
+      {
+        id: layerId,
+        type: 'raster',
+        source: sourceId,
+        minzoom: 0,
+        maxzoom: 19,
+      },
+      beforeId,
+    );
+  }
+
+  private normalizeTileUrl(url: string): string {
+    return url.replace('{s}', 'a').replace('{r}', '');
   }
 
   private getGeometryType(data: GeoJSON.FeatureCollection | GeoJSON.Feature): string {

@@ -13,6 +13,7 @@ import type {
   PolygonOptions,
   MultiPolygonOptions,
   GeoJSONOptions,
+  TileLayerOptions,
 } from '../types';
 import { VN_CENTER, VN_DEFAULT_ZOOM, VN_MIN_ZOOM, VN_MAX_ZOOM } from '../utils/bounds';
 import { EventEmitter } from './EventEmitter';
@@ -72,6 +73,7 @@ export class VNGisMap extends EventEmitter {
       minZoom: config.minZoom ?? VN_MIN_ZOOM,
       bounds: config.bounds,
       scrollWheelZoom: config.scrollWheelZoom ?? true,
+      tileLayer: config.tileLayer,
     };
 
     // Initialize renderer
@@ -238,6 +240,23 @@ export class VNGisMap extends EventEmitter {
     }
 
     this.renderer.setView(center, zoom);
+  }
+
+  /**
+   * Replace the raster basemap without recreating the map or its overlays.
+   */
+  setTileLayer(options: TileLayerOptions): void {
+    if (!this.renderer) {
+      throw new Error('[VNGisMap] Map not initialized');
+    }
+    if (!options.url.trim()) {
+      throw new Error('[VNGisMap] Tile layer URL cannot be empty');
+    }
+
+    this.renderer.setTileLayer(options);
+    if (this.options) {
+      this.options.tileLayer = options;
+    }
   }
 
   /**

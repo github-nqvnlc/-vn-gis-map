@@ -9,6 +9,7 @@ import type {
   MarkerOptions,
   PolygonOptions,
   GeoJSONOptions,
+  TileLayerOptions,
   EventHandler,
 } from '../../types';
 
@@ -27,6 +28,9 @@ export interface IRenderer {
 
   /** Add a GeoJSON layer */
   addGeoJSON(id: string, options: GeoJSONOptions): void;
+
+  /** Replace the raster basemap without recreating the map */
+  setTileLayer(options: TileLayerOptions): void;
 
   /** Remove a layer by ID */
   removeLayer(id: string): void;

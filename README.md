@@ -101,6 +101,86 @@ const map = new VNGisMap({
 | `maxZoom` | `number` | `18` | Zoom tối đa |
 | `bounds` | `[[lat, lng], [lat, lng]]` | `VN_BOUNDS` | Giới hạn kéo bản đồ |
 | `scrollWheelZoom` | `boolean` | `true` | Zoom bằng con lăn chuột |
+| `tileLayer` | `TileLayerOptions` | OpenStreetMap | Raster basemap ban đầu |
+
+---
+
+## Tile map (basemap)
+
+Package nhận raster tile theo URL template. Hai placeholder bắt buộc phổ biến là
+`{z}`, `{x}`, `{y}`; Leaflet còn hỗ trợ trực tiếp `{s}` và `{r}`.
+
+### Cấu hình tile ban đầu
+
+```typescript
+import { VNGisMap } from '@vn-gis/map';
+import type { TileLayerOptions } from '@vn-gis/map';
+
+const voyager: TileLayerOptions = {
+  url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+  attribution:
+    '&copy; OpenStreetMap contributors &copy; CARTO',
+};
+
+const map = new VNGisMap({
+  container: 'map',
+  renderer: 'leaflet',
+  center: [16.0544, 108.2022],
+  zoom: 10,
+  tileLayer: voyager,
+});
+```
+
+Nếu không truyền `tileLayer`, package sử dụng OpenStreetMap làm basemap mặc định.
+
+### Đổi tile khi bản đồ đang chạy
+
+Gọi `setTileLayer()` sau event `ready`. Package chỉ thay base tile hiện tại,
+không tạo lại map và không xóa marker, polygon hoặc GeoJSON đang hiển thị.
+
+```typescript
+map.once('ready', () => {
+  map.setTileLayer({
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; OpenStreetMap contributors',
+  });
+});
+```
+
+Ví dụ tạo bộ chọn basemap:
+
+```typescript
+const tileStyles: Record<string, TileLayerOptions> = {
+  osm: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; OpenStreetMap contributors',
+  },
+  dark: {
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+  },
+  imagery: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; Esri',
+  },
+};
+
+function selectBasemap(id: keyof typeof tileStyles) {
+  map.setTileLayer(tileStyles[id]);
+}
+```
+
+Lưu ý:
+
+- `url` không được rỗng; nếu rỗng, package sẽ throw error.
+- Với MapLibre, package tự đổi `{s}` thành subdomain `a` và bỏ `{r}` để dùng
+  được các URL template phổ biến của Leaflet.
+- Tile server phải cho phép CORS và HTTPS nếu ứng dụng chạy bằng HTTPS.
+- Luôn giữ attribution và tuân thủ điều khoản sử dụng, giới hạn request hoặc API
+  key của nhà cung cấp tile.
+- `setTileLayer()` chỉ dành cho raster tile URL, không nhận MapLibre style JSON.
+
+Xem hướng dẫn đầy đủ tại [docs/TILEMAP.md](docs/TILEMAP.md).
 
 ---
 
@@ -209,6 +289,7 @@ map.addMultiPolygon('selected-city', nextCityOptions);
 |---|---|
 | `addLayer(id, type, options)` | Thêm layer |
 | `addMultiPolygon(id, options)` | Hiển thị ranh giới MultiPolygon |
+| `setTileLayer(options)` | Đổi raster basemap mà không tạo lại bản đồ |
 | `removeLayer(id)` | Xóa layer theo ID |
 | `setView(center, zoom?)` | Đặt tâm và zoom |
 | `fitBounds(bounds)` | Phóng bounds |
@@ -282,6 +363,7 @@ import type {
   MarkerOptions,
   PolygonOptions,
   GeoJSONOptions,
+  TileLayerOptions,
   LatLng,
   BoundsTuple,
 } from '@vn-gis/map';

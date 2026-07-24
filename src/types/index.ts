@@ -15,6 +15,13 @@ export type LatLng = [number, number];
 /** Bounds as [[south, west], [north, east]] */
 export type BoundsTuple = [[number, number], [number, number]];
 
+export interface TileLayerOptions {
+  /** Raster tile URL template */
+  url: string;
+  /** HTML attribution displayed by the renderer */
+  attribution?: string;
+}
+
 // ============================================
 // Map Configuration
 // ============================================
@@ -36,6 +43,8 @@ export interface MapConfig {
   bounds?: BoundsTuple;
   /** Enable scroll wheel zoom (default: true) */
   scrollWheelZoom?: boolean;
+  /** Initial raster basemap */
+  tileLayer?: TileLayerOptions;
 }
 
 export interface MapOptions {
@@ -47,6 +56,7 @@ export interface MapOptions {
   minZoom: number;
   bounds?: BoundsTuple;
   scrollWheelZoom: boolean;
+  tileLayer?: TileLayerOptions;
 }
 
 // ============================================
@@ -208,6 +218,7 @@ export interface IRenderer {
   addMarker(id: string, options: MarkerOptions): void;
   addPolygon(id: string, options: PolygonOptions): void;
   addGeoJSON(id: string, options: GeoJSONOptions): void;
+  setTileLayer(options: TileLayerOptions): void;
   removeLayer(id: string): void;
   setView(center: LatLng, zoom?: number): void;
   fitBounds(bounds: BoundsTuple): void;

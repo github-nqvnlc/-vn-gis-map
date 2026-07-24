@@ -11,6 +11,7 @@ import type {
   GeoJSONOptions,
   EventHandler,
   EventPayload,
+  TileLayerOptions,
 } from '../../types';
 
 export class LeafletRenderer {
@@ -18,6 +19,7 @@ export class LeafletRenderer {
   private eventHandlers = new Map<string, Set<EventHandler>>();
   private layerInstances = new Map<string, L.Layer>();
   private L: typeof import('leaflet') | null = null;
+  private tileLayer: L.TileLayer | null = null;
   private destroyed = false;
 
   initialize(container: HTMLElement, options: MapOptions): void {
@@ -58,10 +60,12 @@ export class LeafletRenderer {
 
       this.map = L.map(container, mapOptions);
 
-      // Add OpenStreetMap tile layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      }).addTo(this.map);
+      this.setTileLayer(
+        options.tileLayer ?? {
+          url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        },
+      );
 
       // Set up event forwarding
       this.setupEventForwarding();
@@ -195,6 +199,20 @@ export class LeafletRenderer {
     this.layerInstances.set(id, layer);
   }
 
+  setTileLayer(options: TileLayerOptions): void {
+    if (!this.map || !this.L) return;
+
+    if (this.tileLayer) {
+      this.map.removeLayer(this.tileLayer);
+    }
+
+    this.tileLayer = this.L.tileLayer(options.url, {
+      attribution: options.attribution ?? '',
+    });
+    this.tileLayer.addTo(this.map);
+    this.tileLayer.bringToBack();
+  }
+
   removeLayer(id: string): void {
     const layer = this.layerInstances.get(id);
     if (layer && this.map) {
@@ -252,6 +270,7 @@ export class LeafletRenderer {
       }
     });
     this.layerInstances.clear();
+    this.tileLayer = null;
 
     if (this.map) {
       this.map.remove();

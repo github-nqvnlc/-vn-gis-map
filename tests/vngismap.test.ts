@@ -13,6 +13,7 @@ vi.mock('../src/renderers/leaflet/LeafletRenderer', () => ({
     addMarker: vi.fn(),
     addPolygon: vi.fn(),
     addGeoJSON: vi.fn(),
+    setTileLayer: vi.fn(),
     removeLayer: vi.fn(),
     setView: vi.fn(),
     fitBounds: vi.fn(),
@@ -28,6 +29,7 @@ vi.mock('../src/renderers/maplibre/MapLibreRenderer', () => ({
     addMarker: vi.fn(),
     addPolygon: vi.fn(),
     addGeoJSON: vi.fn(),
+    setTileLayer: vi.fn(),
     removeLayer: vi.fn(),
     setView: vi.fn(),
     fitBounds: vi.fn(),
@@ -217,6 +219,24 @@ describe('VNGisMap', () => {
     it('should set view with center and zoom', () => {
       const map = new VNGisMap({ container });
       map.setView([21.0285, 105.8542], 12);
+      map.destroy();
+    });
+  });
+
+  describe('setTileLayer', () => {
+    it('should replace the basemap without recreating the map', () => {
+      const map = new VNGisMap({ container });
+      map.setTileLayer({
+        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attribution: '&copy; OpenStreetMap',
+      });
+      expect(map.getOptions()?.tileLayer?.url).toContain('openstreetmap.org');
+      map.destroy();
+    });
+
+    it('should reject an empty tile URL', () => {
+      const map = new VNGisMap({ container });
+      expect(() => map.setTileLayer({ url: ' ' })).toThrow('Tile layer URL cannot be empty');
       map.destroy();
     });
   });
